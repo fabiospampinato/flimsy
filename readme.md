@@ -8,7 +8,7 @@ Check out the [annotated source](/src/flimsy.annotated.ts), if you'd like to mor
 
 Compared to how `Solid`'s reactivity system actually works there are the following (known) differences:
 
-- "Only" these functions are implemented: `createSignal`/`createEffect`/`createMemo`/`createRoot`/`createContext`/`useContext`/`onCleanup`/`onError`/`batch`/`untrack`.
+- "Only" these functions are implemented: `createSignal`, `createEffect`, `createMemo`, `createRoot`, `createContext`, `useContext`, `onCleanup`, `onError`, `batch` and `untrack`.
 - `createSignal`'s setter doesn't give you the current updated value inside a batch, but instead gives you the same value that the getter would give you.
 - `createEffect` doesn't schedule effects, they are executed immediately just like memos. In `Solid` they are scheduled _if_ they exist inside a root.
 - `createEffect` and `createMemo` don't pass the previous execution's return value to your function, just put the value in a variable outside of the function yourself to remember it, if you need that.
