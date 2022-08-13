@@ -11,5 +11,9 @@
     "compile": "tsc --target es2020 --module es2020 --declaration src/flimsy.ts || true",
     "bundle": "esbuild --bundle --format=esm --target=es2020 --minify src/flimsy.ts > src/flimsy.min.js",
     "update": "npm run compile && npm run bundle"
+  },
+  "devDependencies": {
+    "esbuild": "^0.15.2",
+    "typescript": "^4.7.4"
   }
 }
