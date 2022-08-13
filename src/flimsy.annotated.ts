@@ -146,7 +146,7 @@ class Signal<T = unknown> {
 
     }
 
-    // There is a parent and it's stale, we need to fresh it first
+    // There is a parent and it's stale, we need to refresh it first
     // Refreshing the parent may cause other computations to be refreshed too, if needed
     // If we don't do this we get a "glitch", your code could simulaneously see values that don't make sense toghether, like "count" === 3 and "doubleCount" === 4 because it hasn't been updated yet maybe
     if ( this.parent?.waiting ) {
@@ -226,7 +226,7 @@ class Observer {
   public contexts: Record<symbol, any> = {};
   // List of child observers, we need this because when this observer is disposed it has to tell its children to dispose themselves too
   public observers: Set<Observer> = new Set ();
-  // List of signals that this observer depends on, we need this because when this observer is disposed it has to tell signals to not update itself anymore
+  // List of signals that this observer depends on, we need this because when this observer is disposed it has to tell signals to not refresh it anymore
   public signals: Set<Signal> = new Set ();
 
   /* API */
@@ -241,7 +241,7 @@ class Observer {
 
     });
 
-    // Cleaning signal dependencies
+    // Clearing signal dependencies
     this.signals.forEach ( signal => {
 
       signal.observers.delete ( this );
