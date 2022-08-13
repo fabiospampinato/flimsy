@@ -1,0 +1,15 @@
+{
+  "name": "flimsy",
+  "repository": "github:fabiospampinato/flimsy",
+  "description": "A single-file <1kb min+gzip simplified implementation of the reactive core of Solid, optimized for clean code.",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "flimsy.js",
+  "exports": "./flimsy.js",
+  "types": "./flimsy.d.ts",
+  "scripts": {
+    "compile": "tsc --target es2020 --module es2020 --declaration src/flimsy.ts || true",
+    "bundle": "esbuild --bundle --format=esm --target=es2020 --minify src/flimsy.ts > src/flimsy.min.js",
+    "update": "npm run compile && npm run bundle"
+  }
+}
