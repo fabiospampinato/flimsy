@@ -45,7 +45,7 @@ type Options<T> = {
 
 /* GLOBALS */
 
-// It says whether we are currently batching and were to keep the pending values
+// It says whether we are currently batching and where to keep the pending values
 let BATCH: Map<Signal<any>, any> | undefined;
 // It says what the current observer is, depending on the call stack, if any
 let OBSERVER: Observer | undefined;
@@ -62,7 +62,7 @@ class Wrapper {
   /* API */
 
   // Function that executes a function and sets the OBSERVER and TRACKING variables
-  // Basically it keeps track of what hte previous OBSERVER and TRACKING values where, sets the new one, and then restors the old ones back after the function has finished executing
+  // Basically it keeps track of what the previous OBSERVER and TRACKING values were, sets the new ones, and then restores the old ones back after the function has finished executing
   static wrap <T> ( fn: Callback<T>, observer: Observer | undefined, tracking: boolean ): T {
 
     const OBSERVER_PREV = OBSERVER;
@@ -148,7 +148,7 @@ class Signal<T = unknown> {
 
     // There is a parent and it's stale, we need to fresh it first
     // Refreshing the parent may cause other computations to be refreshed too, if needed
-    // If we don't do this we get a "glitch", your code will see simulaneously values that don't make sense toghether, like "count" === 3 and "doubleCount" === 4 because it hasn't been updated yet maybe
+    // If we don't do this we get a "glitch", your code could simulaneously see values that don't make sense toghether, like "count" === 3 and "doubleCount" === 4 because it hasn't been updated yet maybe
     if ( this.parent?.waiting ) {
 
       this.parent.update ();
@@ -179,16 +179,16 @@ class Signal<T = unknown> {
 
         // Notifying observers now
 
-        // First of all all the observers and their observers and so on are marked as stale
+        // First of all the observers and their observers and so on are marked as stale
         this.stale ( 1 );
 
-        // Then they are marked as unstale
+        // Then they are marked as non-stale
         this.stale ( -1 );
 
         // It looks silly but this is crucial
         // Basically if we don't do that computations might be executed multiple times
         // We want to execute them as few times as possible to get the best performance
-        // Also whil Flimsy doesn't care about performance notifying observers like this is easy and robust
+        // Also while Flimsy doesn't care about performance notifying observers like this is easy and robust
 
       }
 
@@ -198,7 +198,7 @@ class Signal<T = unknown> {
 
   }
 
-  // Propagating changes to the "stale" status to every observer of this signal
+  // Propagating change of the "stale" status to every observer of this signal
   // +1 means a signal you depend on is stale, wait for it
   // -1 means a signal you depend on just became non-stale, maybe you can update yourself now if you are not waiting for anything else
   stale = ( change: 1 | -1 ): void => {
@@ -213,12 +213,12 @@ class Signal<T = unknown> {
 
 }
 
-// An observer is something that can have dependencies
+// An observer is something that can have signals as dependencies
 class Observer {
 
   /* VARIABLES */
 
-  // The parent observer, if any, we need this because context reads and error throws kind of bubble up
+  // The parent observer, if any, we need this because context reads and errors kind of bubble up
   public parent: Observer | undefined = OBSERVER;
   // List of custom cleanup functions to call
   public cleanups: Callback[] = [];
@@ -294,8 +294,8 @@ class Observer {
 
 // A root is a special kind of observer, the function passed to it receives the "dispose" function
 // Plus in contrast to Computations the function here will not be re-executed
-// Plus a root doesn't link itself with the parent, so the parent won't dispose of child roots because it doesn't know about them
-// Still the Root has to know about its parent, because contexts lookups and error handlers bubble up
+// Plus a root doesn't link itself with its parent, so the parent won't dispose of child roots simply because it doesn't know about them. As a consequence you'll have to eventually dispose of roots yourself manually
+// Still the Root has to know about its parent, because contexts reads and errors bubble up
 class Root extends Observer {
 
   /* API */
@@ -336,7 +336,7 @@ class Computation<T = unknown> extends Observer {
     this.fn = fn;
     // Creating the internal signal, we have a dedicated "run" function because we don't want to call `signal.set` the first time, because if we did that we might have a bug if we are using a custom equality comparison as that would be called with "undefined" as the current value the first time
     this.signal = new Signal<T> ( this.run (), options );
-    // Linking this computation with the parent, so that we can fetch back the computation from the signal when checking if the computation is stale or not
+    // Linking this computation with the parent, so that we can get a reference to the computation from the signal when we want to check if the computation is stale or not
     this.signal.parent = this;
 
   }
@@ -363,19 +363,19 @@ class Computation<T = unknown> extends Observer {
   // Same as run, but also update the signal
   update = (): void => {
 
-    // Resetting "waiting", as it may > 0 here if the computation got forcefully refreshed
+    // Resetting "waiting", as it may be > 0 here if the computation got forcefully refreshed
     this.waiting = 0;
 
-    // Doing whatever run dows and updating the signal
+    // Doing whatever run does and updating the signal
     this.signal.set ( this.run () );
 
   }
 
-  // Propagating changes to the "stale" status to every observer of the internal signal
+  // Propagating change of the "stale" status to every observer of the internal signal
   stale = ( change: 1 | -1 ): void => {
 
     // If this.waiting is already 0 but change is -1 it means the computation got forcefully refreshed already
-    // So there's nothing to do here, refreshing again would be wasteful and setting this to -1 would be buggy
+    // So there's nothing to do here, refreshing again would be wasteful and setting this to -1 would be non-sensical
     if ( !this.waiting && change < 0 ) return;
 
     // Update the counter
@@ -435,11 +435,11 @@ function createContext <T> (): Context<T | undefined>;
 function createContext <T> ( defaultValue: T ): Context<T>;
 function createContext <T> ( defaultValue?: T ) {
 
-  // Making a new identifier frot his context
+  // Making a new identifier for this context
   const id = Symbol ();
 
   // Making get/set functions dedicated to this context
-  // If the getter finds null or undefined as the value then the default value is returned
+  // If the getter finds null or undefined as the value then the default value is returned instead
   const get = (): T | undefined => OBSERVER?.get ( id ) ?? defaultValue;
   const set = ( value: T ): void => OBSERVER?.set ( id, value );
 
@@ -451,7 +451,7 @@ function useContext <T> ( context: Context<T> ): T {
 
   // Just calling the getter
   // this function is implemented for compatibility with Solid
-  // Solid's implementation of this is a bit more interesting because it doesn't expose a "get" method on the context directly
+  // Solid's implementation of this is a bit more interesting because it doesn't expose a "get" method on the context directly that can just be called like this
   return context.get ();
 
 }
@@ -467,16 +467,16 @@ function onError ( fn: ErrorFunction ): void {
 
   if ( !OBSERVER ) return;
 
-  // If there's a current observer let's add an error function to it, ensuring the array containing these functions exists first though
+  // If there's a current observer let's add an error handler function to it, ensuring the array containing these functions exists first though
   OBSERVER.contexts[SYMBOL_ERRORS] ||= [];
   OBSERVER.contexts[SYMBOL_ERRORS].push ( fn );
 
 }
 
-// Batching is an important performance feature, it holds onto updates until the function executes, that that computations are later re-executed the minimum amount of times possible
-// Like if you change a signal in a loop for some reasonw without batchin its observers will be re-executed with each iteration
-// With batching they are only executed at this end, potentially once instead of N times
-// While batching is active the getter will give you the "old" value of the signal, as the new one won't be set yet
+// Batching is an important performance feature, it holds onto updates until the function has finished executing, so that computations are later re-executed the minimum amount of times possible
+// Like if you change a signal in a loop, for some reason, then without batching its observers will be re-executed with each iteration
+// With batching they are only executed at this end, potentially just 1 time instead of N times
+// While batching is active the getter will give you the "old" value of the signal, as the new one hasn't actually been be set yet
 function batch <T> ( fn: Callback<T> ): T {
 
   // Already batching? Nothing else to do then
