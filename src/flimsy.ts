@@ -137,8 +137,8 @@ class Signal<T = unknown> {
 
         this.value = valueNext;
 
-        this.stale ( 1 );
-        this.stale ( -1 );
+        this.stale ( 1, true );
+        this.stale ( -1, true );
 
       }
 
@@ -148,11 +148,11 @@ class Signal<T = unknown> {
 
   }
 
-  stale = ( change: 1 | -1 ): void => {
+  stale = ( change: 1 | -1, fresh: boolean ): void => {
 
     this.observers.forEach ( observer => {
 
-      observer.stale ( change );
+      observer.stale ( change, fresh );
 
     });
 
@@ -244,6 +244,7 @@ class Computation<T = unknown> extends Observer {
   public fn: Callback<T>;
   public signal: Signal<T>;
   public waiting: number = 0;
+  public fresh: boolean = false;
 
   /* CONSTRUCTOR */
 
@@ -277,17 +278,30 @@ class Computation<T = unknown> extends Observer {
 
   }
 
-  stale = ( change: 1 | -1 ): void => {
+  stale = ( change: 1 | -1, fresh: boolean ): void => {
 
     if ( !this.waiting && change < 0 ) return;
 
-    this.waiting += change;
+    if ( !this.waiting && change > 0 ) {
 
-    this.signal.stale ( change );
+      this.signal.stale ( 1, false );
+
+    }
+
+    this.waiting += change;
+    this.fresh ||= fresh;
 
     if ( !this.waiting ) {
 
-      this.update ();
+      this.waiting = 0;
+
+      if ( this.fresh ) {
+
+        this.update ();
+
+      }
+
+      this.signal.stale ( -1, false );
 
     }
 
@@ -373,9 +387,9 @@ function batch <T> ( fn: Callback<T> ): T {
 
     BATCH = undefined;
 
-    batch.forEach ( ( value, signal ) => signal.stale ( 1 ) );
+    batch.forEach ( ( value, signal ) => signal.stale ( 1, false ) );
     batch.forEach ( ( value, signal ) => signal.set ( () => value ) );
-    batch.forEach ( ( value, signal ) => signal.stale ( -1 ) );
+    batch.forEach ( ( value, signal ) => signal.stale ( -1, false ) );
 
   }
 

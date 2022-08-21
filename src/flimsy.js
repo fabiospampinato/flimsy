@@ -53,15 +53,15 @@ class Signal {
                 }
                 else {
                     this.value = valueNext;
-                    this.stale(1);
-                    this.stale(-1);
+                    this.stale(1, true);
+                    this.stale(-1, true);
                 }
             }
             return this.value;
         };
-        this.stale = (change) => {
+        this.stale = (change, fresh) => {
             this.observers.forEach(observer => {
-                observer.stale(change);
+                observer.stale(change, fresh);
             });
         };
         this.value = value;
@@ -118,6 +118,7 @@ class Computation extends Observer {
     constructor(fn, options) {
         super();
         this.waiting = 0;
+        this.fresh = false;
         /* API */
         this.run = () => {
             this.dispose();
@@ -128,13 +129,20 @@ class Computation extends Observer {
             this.waiting = 0;
             this.signal.set(this.run());
         };
-        this.stale = (change) => {
+        this.stale = (change, fresh) => {
             if (!this.waiting && change < 0)
                 return;
+            if (!this.waiting && change > 0) {
+                this.signal.stale(1, false);
+            }
             this.waiting += change;
-            this.signal.stale(change);
+            this.fresh || (this.fresh = fresh);
             if (!this.waiting) {
-                this.update();
+                this.waiting = 0;
+                if (this.fresh) {
+                    this.update();
+                }
+                this.signal.stale(-1, false);
             }
         };
         this.fn = fn;
@@ -183,9 +191,9 @@ function batch(fn) {
     }
     finally {
         BATCH = undefined;
-        batch.forEach((value, signal) => signal.stale(1));
+        batch.forEach((value, signal) => signal.stale(1, false));
         batch.forEach((value, signal) => signal.set(() => value));
-        batch.forEach((value, signal) => signal.stale(-1));
+        batch.forEach((value, signal) => signal.stale(-1, false));
     }
 }
 function untrack(fn) {

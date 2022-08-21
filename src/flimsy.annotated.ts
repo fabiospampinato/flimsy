@@ -180,10 +180,12 @@ class Signal<T = unknown> {
         // Notifying observers now
 
         // First of all the observers and their observers and so on are marked as stale
-        this.stale ( 1 );
+        // We also tell them that something actually changed, so when it comes down to it they should update themselves
+        this.stale ( 1, true );
 
         // Then they are marked as non-stale
-        this.stale ( -1 );
+        // We also tell them that something actually changed, so when it comes down to it they should update themselves
+        this.stale ( -1, true );
 
         // It looks silly but this is crucial
         // Basically if we don't do that computations might be executed multiple times
@@ -201,11 +203,14 @@ class Signal<T = unknown> {
   // Propagating change of the "stale" status to every observer of this signal
   // +1 means a signal you depend on is stale, wait for it
   // -1 means a signal you depend on just became non-stale, maybe you can update yourself now if you are not waiting for anything else
-  stale = ( change: 1 | -1 ): void => {
+  // The "fresh" value tells observers whether something actually changed or not
+  // If nothing changed, not for this signal nor for any other signal that a computation is listening to, then the computation will just not be re-executed, for performance
+  // If at least one signal changed the computation will eventually be re-executed
+  stale = ( change: 1 | -1, fresh: boolean ): void => {
 
     this.observers.forEach ( observer => {
 
-      observer.stale ( change );
+      observer.stale ( change, fresh );
 
     });
 
@@ -326,6 +331,8 @@ class Computation<T = unknown> extends Observer {
   // waiting === 0 means this computation contains a fresh value, it's not waiting for anything, all of its dependencies are up-to-date
   // waiting < 0 doesn't make sense and never happens
   public waiting: number = 0;
+  // The fresh flag tells the computation whether one of its dependencies changed or not, if some of its dependencies got re-executed but nothing really changed then we just don't re-execute this computation
+  public fresh: boolean = false;
 
   /* CONSTRUCTOR */
 
@@ -372,23 +379,45 @@ class Computation<T = unknown> extends Observer {
   }
 
   // Propagating change of the "stale" status to every observer of the internal signal
-  stale = ( change: 1 | -1 ): void => {
+  // Propagating a "false" "fresh" status too, it will be the signal itself that will propagate a "true" one when and if it will actually change
+  stale = ( change: 1 | -1, fresh: boolean ): void => {
 
     // If this.waiting is already 0 but change is -1 it means the computation got forcefully refreshed already
     // So there's nothing to do here, refreshing again would be wasteful and setting this to -1 would be non-sensical
     if ( !this.waiting && change < 0 ) return;
 
+    // Marking computations depending on us as stale
+    // We only need to do this once, when the "waiting" counter goes from 0 to 1
+    // We also tell them that nothing changed, becuase we don't know if something will change yet
+    if ( !this.waiting && change > 0 ) {
+
+      this.signal.stale ( 1, false );
+
+    }
+
     // Update the counter
     this.waiting += change;
 
-    // Propagate the change to observers of the signal
-    this.signal.stale ( change );
+    // Internally we need to use the "fresh" status we recevied to understand if at least one of our dependencies changed
+    this.fresh ||= fresh;
 
     // Are we still waiting for something?
     if ( !this.waiting ) {
 
-      // If not, let's update ourselves
-      this.update ();
+      // Resetting the counter now, as maybe the update function won't be executed
+      this.waiting = 0;
+
+      // Did something actually change? If so we actually update
+      if ( this.fresh ) {
+
+        this.update ();
+
+      }
+
+      // Now finally we mark computations depending on us as unstale
+      // We still tell them that we don't know if something changed here
+      // if something changed the signal itself will propagate its own true "fresh" status
+      this.signal.stale ( -1, false );
 
     }
 
@@ -496,11 +525,13 @@ function batch <T> ( fn: Callback<T> ): T {
     BATCH = undefined;
 
     // Marking all the signals as stale, all at once, or each update to each signal will cause its observers to be updated, but there might be observers listening to multiple of these signals, we want to execute them once still if possible
-    batch.forEach ( ( value, signal ) => signal.stale ( 1 ) );
+    // We don't know if something will change, so we set the "fresh" flag to "false"
+    batch.forEach ( ( value, signal ) => signal.stale ( 1, false ) );
     // Updating values
     batch.forEach ( ( value, signal ) => signal.set ( () => value ) );
     // Now making all those signals as not stale, allowing observers to finally update themselves
-    batch.forEach ( ( value, signal ) => signal.stale ( -1 ) );
+    // We don't know if something did change, so we set the "fresh" flag to "false"
+    batch.forEach ( ( value, signal ) => signal.stale ( -1, false ) );
 
   }
 
