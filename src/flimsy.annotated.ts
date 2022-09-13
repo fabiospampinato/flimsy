@@ -20,7 +20,7 @@ type Getter<T> = {
 
 // Type for the setter function for signals
 type Setter<T> = {
-  // It can either be called with an update function, which will called with the current value
+  // It can either be called with an update function, which will be called with the current value
   ( update: UpdateFunction<T> ): T,
   // Or the new value directly, it mustn't be a function though, or it will treated as an update function
   ( value: T ): T
@@ -175,6 +175,7 @@ class Signal<T = unknown> {
 
       } else {
 
+        // Setting the new value for the signal
         this.value = valueNext;
 
         // Notifying observers now
@@ -310,7 +311,7 @@ class Root extends Observer {
     // Making a customized function, so that we can reuse the Wrapper.wrap function, which doesn't pass anything to our function
     const fnWithDispose = () => fn ( this.dispose );
 
-    // Calling our function, with "this" as the current disposer, and "false" as the value for TRACKING
+    // Calling our function, with "this" as the current observer, and "false" as the value for TRACKING
     return Wrapper.wrap ( fnWithDispose, this, false );
 
   }
