@@ -456,7 +456,7 @@ function createMemo <T> ( fn: Callback<T>, options?: Options<T> ): Getter<T> {
 function createRoot <T> ( fn: RootFunction<T> ): T {
 
   // A root is just a plain observer that exposes the "dispose" method and that will survive its parent observer being disposed
-  // Roots are essential for achieving great formance with things like <For> in Solid
+  // Roots are essential for achieving great performance with things like <For> in Solid
   return new Root ().wrap ( fn );
 
 }
