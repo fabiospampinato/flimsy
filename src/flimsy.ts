@@ -274,6 +274,8 @@ class Computation<T = unknown> extends Observer {
 
     this.waiting = 0;
 
+    this.fresh = false;
+
     this.signal.set ( this.run () );
 
   }
