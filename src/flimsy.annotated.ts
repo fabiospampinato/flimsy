@@ -374,6 +374,9 @@ class Computation<T = unknown> extends Observer {
     // Resetting "waiting", as it may be > 0 here if the computation got forcefully refreshed
     this.waiting = 0;
 
+    // Resettings "fresh" for the next computation
+    this.fresh = false;
+
     // Doing whatever run does and updating the signal
     this.signal.set ( this.run () );
 

@@ -127,6 +127,7 @@ class Computation extends Observer {
         };
         this.update = () => {
             this.waiting = 0;
+            this.fresh = false;
             this.signal.set(this.run());
         };
         this.stale = (change, fresh) => {
