@@ -1,22 +1,22 @@
-declare type Callback<T = void> = () => T;
-declare type EqualsFunction<T> = (value: T, valueNext: T) => boolean;
-declare type ErrorFunction = (error: unknown) => void;
-declare type RootFunction<T> = (dispose: Callback) => T;
-declare type UpdateFunction<T> = (value: T) => T;
-declare type Getter<T> = {
+type Callback<T = void> = () => T;
+type EqualsFunction<T> = (value: T, valueNext: T) => boolean;
+type ErrorFunction = (error: unknown) => void;
+type RootFunction<T> = (dispose: Callback) => T;
+type UpdateFunction<T> = (value: T) => T;
+type Getter<T> = {
     (): T;
 };
-declare type Setter<T> = {
+type Setter<T> = {
     (update: UpdateFunction<T>): T;
     (value: T): T;
 };
-declare type Context<T> = {
+type Context<T> = {
     id: symbol;
     defaultValue: T;
     get(): T;
     set(value: T): void;
 };
-declare type Options<T> = {
+type Options<T> = {
     equals?: false | EqualsFunction<T>;
 };
 declare function createSignal<T>(): [Getter<T | undefined>, Setter<T | undefined>];
