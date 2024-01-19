@@ -378,7 +378,7 @@ class Computation<T = unknown> extends Observer {
     this.fresh = false;
 
     // Doing whatever run does and updating the signal
-    this.signal.set ( this.run () );
+    this.signal.set ( this.run );
 
   }
 
