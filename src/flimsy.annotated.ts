@@ -489,6 +489,23 @@ function useContext <T> ( context: Context<T> ): T {
 
 }
 
+function getOwner (): Observer | undefined {
+
+  // Just returning the current observer, to be used in combination with "runWithOwner"
+  return OBSERVER;
+
+}
+
+function runWithOwner <T> ( observer: Observer | undefined, fn: () => T ): T {
+
+  // Automatically inferring whether tracking should be on or off for this owner
+  // Only computations can be re-executed, so that's when we will want tracking to be on
+  const tracking = observer instanceof Computation;
+
+  return Wrapper.wrap ( fn, observer, tracking );
+
+}
+
 function onCleanup ( fn: Callback ): void {
 
   // If there's a current observer let's add a cleanup function to it
@@ -551,5 +568,5 @@ function untrack <T> ( fn: Callback<T> ): T {
 
 /* EXPORT */
 
-export {createContext, createEffect, createMemo, createRoot, createSignal, onCleanup, onError, useContext, batch, untrack};
+export {createContext, createEffect, createMemo, createRoot, createSignal, getOwner, runWithOwner, onCleanup, onError, useContext, batch, untrack};
 export type {Getter, Setter, Context, Options};

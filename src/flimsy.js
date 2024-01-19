@@ -173,6 +173,13 @@ function createContext(defaultValue) {
 function useContext(context) {
     return context.get();
 }
+function getOwner() {
+    return OBSERVER;
+}
+function runWithOwner(observer, fn) {
+    const tracking = observer instanceof Computation;
+    return Wrapper.wrap(fn, observer, tracking);
+}
 function onCleanup(fn) {
     OBSERVER?.cleanups.push(fn);
 }
@@ -201,4 +208,4 @@ function untrack(fn) {
     return Wrapper.wrap(fn, OBSERVER, false);
 }
 /* EXPORT */
-export { createContext, createEffect, createMemo, createRoot, createSignal, onCleanup, onError, useContext, batch, untrack };
+export { createContext, createEffect, createMemo, createRoot, createSignal, getOwner, runWithOwner, onCleanup, onError, useContext, batch, untrack };

@@ -360,6 +360,20 @@ function useContext <T> ( context: Context<T> ): T {
 
 }
 
+function getOwner (): Observer | undefined {
+
+  return OBSERVER;
+
+}
+
+function runWithOwner <T> ( observer: Observer | undefined, fn: () => T ): T {
+
+  const tracking = observer instanceof Computation;
+
+  return Wrapper.wrap ( fn, observer, tracking );
+
+}
+
 function onCleanup ( fn: Callback ): void {
 
   OBSERVER?.cleanups.push ( fn );
@@ -405,5 +419,5 @@ function untrack <T> ( fn: Callback<T> ): T {
 
 /* EXPORT */
 
-export {createContext, createEffect, createMemo, createRoot, createSignal, onCleanup, onError, useContext, batch, untrack};
+export {createContext, createEffect, createMemo, createRoot, createSignal, getOwner, runWithOwner, onCleanup, onError, useContext, batch, untrack};
 export type {Getter, Setter, Context, Options};
