@@ -16,7 +16,7 @@ Compared to how `Solid`'s reactivity system actually works there are the followi
 - `createContext`'s `set` function will register the context value with the parent observer, so you need to create a custom parent observer yourself (which is basically what `Provider` does), if you need that.
 - `Flimsy` uses a [`MobX`](https://github.com/mobxjs/mobx)-like propagation algorithm, where computations in the reactive graph are marked stale/ready, `Solid` should work similarly, but I don't understand it well enough to know what the differences may be.
 - `Flimsy` doesn't care about performance nor memory usage, it instead optimizes for clean code.
-- `Flimsy` is probably buggier, hence the name, though if you'd like to use this in production please open an issue, I'll wire it with [`oby`](https://github.com/vobyjs/oby)'s extensive test suite.
+- `Flimsy` is probably buggier, hence the name, though if you report a bug I'll look into it.
 - `Solid`'s reactivity system doesn't do anything on the server by default, you'll have to explicitly use the browser build to make it work, `Flimsy` is isomorphic.
 
 ## Install
