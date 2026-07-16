@@ -392,7 +392,7 @@ class Computation<T = unknown> extends Observer {
 
     // Marking computations depending on us as stale
     // We only need to do this once, when the "waiting" counter goes from 0 to 1
-    // We also tell them that nothing changed, becuase we don't know if something will change yet
+    // We also tell them that nothing changed, because we don't know if something will change yet
     if ( !this.waiting && change > 0 ) {
 
       this.signal.stale ( 1, false );
