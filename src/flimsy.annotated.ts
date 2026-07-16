@@ -228,7 +228,7 @@ class Observer {
   public parent: Observer | undefined = OBSERVER;
   // List of custom cleanup functions to call
   public cleanups: Callback[] = [];
-  // Object containg data for the context, plus error handlers, if any, since we are putting those there later in this file
+  // Object containing data for the context, plus error handlers, if any, since we are putting those there later in this file
   public contexts: Record<symbol, any> = {};
   // List of child observers, we need this because when this observer is disposed it has to tell its children to dispose themselves too
   public observers: Set<Observer> = new Set ();
