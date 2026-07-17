@@ -148,7 +148,7 @@ class Signal<T = unknown> {
 
     // There is a parent and it's stale, we need to refresh it first
     // Refreshing the parent may cause other computations to be refreshed too, if needed
-    // If we don't do this we get a "glitch", your code could simulaneously see values that don't make sense toghether, like "count" === 3 and "doubleCount" === 4 because it hasn't been updated yet maybe
+    // If we don't do this we get a "glitch", your code could simulaneously see values that don't make sense together, like "count" === 3 and "doubleCount" === 4 because it hasn't been updated yet maybe
     if ( this.parent?.waiting ) {
 
       this.parent.update ();
@@ -402,7 +402,7 @@ class Computation<T = unknown> extends Observer {
     // Update the counter
     this.waiting += change;
 
-    // Internally we need to use the "fresh" status we recevied to understand if at least one of our dependencies changed
+    // Internally we need to use the "fresh" status we received to understand if at least one of our dependencies changed
     this.fresh ||= fresh;
 
     // Are we still waiting for something?
